@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Life</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script type="module" src="./index.js" defer></script>
+  </head>
+  <body>
+    <main class="page">
+      <section class="control">
+        <label>
+          Game area size:
+          <input type="number" class="dimension" min="1" />
+        </label>
+        <fieldset>
+          <legend>First generation</legend>
+
+          <label for="random"> Random: </label>
+          <input type="radio" id="random" value="Random" name="first" class="random" />
+
+          <label for="custom"> Custom: </label>
+          <input type="radio" id="custom" value="Custom" name="first" class="custom" checked />
+        </fieldset>
+        <label>
+          Generation duration [sec]:
+          <input type="number" id="generation-time" min="1" />
+        </label>
+        <button type="button">Start game!</button>
+      </section>
+      <section class="field"></section>
+    </main>
+  </body>
+</html>

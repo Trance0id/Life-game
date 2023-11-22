@@ -1,0 +1,32 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+.control {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.field__line {
+  list-style: none;
+  display: flex;
+  flex-direction: row;
+}
+
+.field__cell {
+  min-width: 20px;
+  aspect-ratio: 1 / 1;
+  border: 1px solid black;
+}
+
+.field__cell_alive {
+  background-color: black;
+}
