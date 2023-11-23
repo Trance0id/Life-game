@@ -12,22 +12,22 @@
       <section class="control">
         <label>
           Game area size:
-          <input type="number" class="dimension" min="1" />
+          <input type="number" class="dimension" min="3" />
         </label>
         <fieldset>
           <legend>First generation</legend>
 
           <label for="random"> Random: </label>
-          <input type="radio" id="random" value="Random" name="first" class="random" />
+          <input type="radio" id="random" value="Random" name="first" class="random" checked/>
 
           <label for="custom"> Custom: </label>
-          <input type="radio" id="custom" value="Custom" name="first" class="custom" checked />
+          <input type="radio" id="custom" value="Custom" name="first" class="custom" />
         </fieldset>
         <label>
           Generation duration [sec]:
           <input type="number" id="generation-time" min="1" />
         </label>
-        <button type="button">Start game!</button>
+        <button type="button" class="start-button">Start game!</button>
       </section>
       <section class="field"></section>
     </main>
