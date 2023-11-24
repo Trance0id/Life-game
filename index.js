@@ -23,6 +23,7 @@ class Population {
   }
 
   stepForward() {
+    performance.mark('start-calculating');
     const nextPopulation = new Set();
     const allNeighbours = new Set();
     this.currentPopulation.forEach(cell => {
@@ -30,7 +31,7 @@ class Population {
       if (aliveNeighboursAmount === 2 || aliveNeighboursAmount === 3) {
         nextPopulation.add(cell);
       }
-      allNeighbours.union(this.getNeighbours(cell));
+      this.getNeighbours(cell).forEach(nB => allNeighbours.add(nB));
     });
     allNeighbours.forEach(neighbour => {
       if (this.countAliveNeighbours(neighbour) === 3) {
@@ -39,11 +40,13 @@ class Population {
     });
     this.currentPopulation = nextPopulation;
     this.currentStepNo++;
+    performance.mark('finish-calculating');
+    performance.measure('measure-calculating', 'start-calculating', 'finish-calculating');
     return nextPopulation;
   }
 
   countAliveNeighbours(cell) {
-    this.getNeighbours(cell).reduce((count, nB) => (count + this.checkAlive(nB) ? 1 : 0));
+    return this.getNeighbours(cell).reduce((count, nB) => count + (this.checkAlive(nB) ? 1 : 0), 0);
   }
 
   getNeighbours(cell) {
@@ -65,7 +68,7 @@ class Population {
       neighbours[0] += this.columns;
       neighbours[5] += this.columns;
     }
-    if ((cellColumn = this.columns - 1)) {
+    if (cellColumn === this.columns - 1) {
       neighbours[4] -= this.columns;
       neighbours[1] -= this.columns;
       neighbours[7] -= this.columns;
@@ -94,27 +97,26 @@ class FieldDrawer {
   }
 
   drawField([m, n], population = new Set()) {
+    performance.mark('start-drawing');
     this.container.innerHTML = '';
-    console.log(this.container.style);
     this.container.style.gridTemplateColumns = `repeat(${m}, 1fr)`;
     for (let y = 0; y < n; y++) {
       for (let x = 0; x < m; x++) {
         const cell = document.createElement('div');
         cell.classList.add('field__cell');
         cell.dataset.value = m * y + x;
-        // if (population.has(m * y + x)) {
-        //   cell.classList.add('field__cell_alive');
-        // }
         this.container.append(cell);
       }
     }
     if (population.size > 0) {
       this.markAlive(population);
     }
+    performance.mark('finish-drawing');
+    performance.measure('measure-drawing', 'start-drawing', 'finish-drawing');
   }
 
   markAlive(population) {
-    this.container.children.forEach(cell => {
+    Array.from(this.container.children).forEach(cell => {
       if (population.has(parseInt(cell.dataset.value))) {
         cell.classList.add('field__cell_alive');
       }
@@ -122,10 +124,20 @@ class FieldDrawer {
   }
 }
 
+let population = null;
+let gameCycle = 0;
 let gameStarted = false;
+let populationSet = false;
 let fieldSize = 3;
-const fieldSizeSelector = document.querySelector('.dimension');
+
+const randomFirst = document.querySelector('#random');
+const customFirst = document.querySelector('#custom');
+const genNoInput = document.querySelector('#generation-no');
+const fieldSizeSelector = document.querySelector('#field-size');
 fieldSizeSelector.value = fieldSize;
+const startButton = document.querySelector('.start-button');
+const resetButton = document.querySelector('.reset-button');
+
 const drawer = new FieldDrawer('.field');
 drawer.drawField([fieldSize, fieldSize]);
 
@@ -134,32 +146,59 @@ fieldSizeSelector.addEventListener('change', e => {
   drawer.drawField([fieldSize, fieldSize]);
 });
 
-const randomFirst = document.querySelector('#random');
 randomFirst.addEventListener('change', e => {
   console.log('true');
-  
 });
 
-const customFirst = document.querySelector('#custom');
-
-
-
-let population = null;
-// population = new Population();
-// population.setCurrentPopulation(...Population.getRandomPopulation());
-
-const startButton = document.querySelector('.start-button');
-startButton.addEventListener('click', () => {
-  if (!gameStarted) { // Start game
-    e.target.textContent = 'Next Step';
-    // gameStarted = true;
+startButton.addEventListener('click', e => {
+  if (!gameStarted) {
+    // Start game
+    e.target.textContent = 'Start Game!';
+    gameStarted = true;
     if (!population) {
+      genNoInput.value = 0;
       population = new Population(fieldSize, fieldSize);
-      drawer.drawField(population.setRandomCurrentPopulation());
+      drawer.drawField([fieldSize, fieldSize], population.setRandomCurrentPopulation());
     }
-
-  } else { // Pause game
-    e.target.textContent = 'Start game';
-
+  } else {
+    // Pause game
+    // e.target.textContent = 'Start game';
+    const observer = new PerformanceObserver(perfObserve);
+    observer.observe({ entryTypes: ['measure'] });
+    const gameLoop = () => {
+      drawer.drawField([fieldSize, fieldSize], population.stepForward());
+      genNoInput.value = population.currentStepNo;
+      gameCycle = setTimeout(() => {
+        requestAnimationFrame(gameLoop);
+      }, document.querySelector('#generation-time').value * 1000);
+    };
+    gameLoop();
+    e.target.disabled = true;
+    resetButton.disabled = false;
   }
 });
+
+resetButton.addEventListener('click', () => {
+  clearTimeout(gameCycle);
+  population = null;
+  gameStarted = false;
+  startButton.textContent = 'Setup game';
+  startButton.disabled = false;
+  drawer.drawField([fieldSize, fieldSize]);
+});
+
+function perfObserve(list) {
+  console.log('vars creation');
+  const drTime = document.querySelector('#draw-time');
+  const clTime = document.querySelector('#calc-time');
+  list.getEntries().forEach((entry) => {
+    if (entry.name === "measure-drawing") {
+      drTime.value = entry.duration;
+    }
+    if (entry.name === "measure-calculating") {
+      clTime.value = entry.duration;
+    }
+  });
+}
+
+

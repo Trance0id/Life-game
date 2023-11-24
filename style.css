@@ -3,6 +3,15 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  max-width: 100%;
+}
+
+.control fieldset {
+  flex-shrink: 0;
+}
+
+.control input {
+  width: 50px;
 }
 
 .field {
@@ -16,9 +25,9 @@
 .field__cell {
   width: 100%;
   aspect-ratio: 1 / 1;
-  border: 1px dashed gray;
+  border: 1px solid gray;
 }
 
 .field__cell_alive {
-  background-color: green;
+  background-color: gray;
 }

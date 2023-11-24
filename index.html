@@ -12,7 +12,7 @@
       <section class="control">
         <label>
           Game area size:
-          <input type="number" class="dimension" min="3" />
+          <input type="number" id="field-size" class="dimension" min="3" />
         </label>
         <fieldset>
           <legend>First generation</legend>
@@ -25,9 +25,22 @@
         </fieldset>
         <label>
           Generation duration [sec]:
-          <input type="number" id="generation-time" min="1" />
+          <input type="number" id="generation-time" min="1" value="1"/>
         </label>
-        <button type="button" class="start-button">Start game!</button>
+        <label>
+          Generations count:
+          <input type="text" id="generation-no" disabled value="0"/>
+        </label>
+        <label>
+          Calculating time [ms]:
+          <input type="text" id="calc-time" disabled value="0"/>
+        </label>
+        <label>
+          Drawing time [ms]:
+          <input type="text" id="draw-time" disabled value="0"/>
+        </label>
+        <button type="button" class="start-button">Setup game!</button>
+        <button type="button" class="reset-button" disabled>Finish game!</button>
       </section>
       <section class="field"></section>
     </main>
