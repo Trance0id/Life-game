@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Life</title>
-    <link rel="stylesheet" href="./style.css" />
-    <script type="module" src="./index.js" defer></script>
-  </head>
-  <body>
-    <main class="page">
-      <section class="control">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Life</title>
+  <link rel="stylesheet" href="./style.css" />
+  <script type="module" src="./index.js" defer></script>
+</head>
+
+<body>
+  <main class="page">
+    <section>
+      <fieldset class="controls">
         <label>
           Game area size:
           <input type="number" id="field-size" class="dimension" min="3" />
@@ -18,31 +21,33 @@
           <legend>First generation</legend>
 
           <label for="random"> Random: </label>
-          <input type="radio" id="random" value="Random" name="first" class="random" checked/>
+          <input type="radio" id="random" value="Random" name="first" class="random" checked />
 
           <label for="custom"> Custom: </label>
           <input type="radio" id="custom" value="Custom" name="first" class="custom" />
         </fieldset>
         <label>
           Generation duration [sec]:
-          <input type="number" id="generation-time" min="1" value="1"/>
+          <input type="number" id="generation-time" min="1" value="1" />
         </label>
         <label>
           Generations count:
-          <input type="text" id="generation-no" disabled value="0"/>
+          <input type="text" id="generation-no" disabled value="0" />
         </label>
         <label>
           Calculating time [ms]:
-          <input type="text" id="calc-time" disabled value="0"/>
+          <input type="text" id="calc-time" disabled value="0" />
         </label>
-        <label>
+        <!-- <label>
           Drawing time [ms]:
           <input type="text" id="draw-time" disabled value="0"/>
-        </label>
-        <button type="button" class="start-button">Setup game!</button>
-        <button type="button" class="reset-button" disabled>Finish game!</button>
-      </section>
-      <section class="field"></section>
-    </main>
-  </body>
+        </label> -->
+      </fieldset>
+      <button type="button" class="start-button">Apply setup</button>
+      <button type="button" class="reset-button" disabled>Reset game</button>
+    </section>
+    <section class="field"></section>
+  </main>
+</body>
+
 </html>

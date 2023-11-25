@@ -40,8 +40,8 @@ class Population {
     });
     this.currentPopulation = nextPopulation;
     this.currentStepNo++;
-    performance.mark('finish-calculating');
-    performance.measure('measure-calculating', 'start-calculating', 'finish-calculating');
+    // performance.mark('finish-calculating');
+    performance.measure('measure-calculating', 'start-calculating');
     return nextPopulation;
   }
 
@@ -56,7 +56,16 @@ class Population {
     // 2 3 4
     // 0 * 1
     // 5 6 7
-    const fakeNeighbours = [cell - 1, cell + 1, higherCell - 1, higherCell, higherCell + 1, lowerCell - 1, lowerCell, lowerCell + 1];
+    const fakeNeighbours = [
+      cell - 1,
+      cell + 1,
+      higherCell - 1,
+      higherCell,
+      higherCell + 1,
+      lowerCell - 1,
+      lowerCell,
+      lowerCell + 1,
+    ];
     return this.correctNeighbours(fakeNeighbours, cell);
   }
 
@@ -92,12 +101,12 @@ class Population {
 }
 
 class FieldDrawer {
-  constructor(fieldContainerSelector) {
-    this.container = document.querySelector(fieldContainerSelector);
+  constructor(fieldContainer) {
+    this.container = fieldContainer;
   }
 
   drawField([m, n], population = new Set()) {
-    performance.mark('start-drawing');
+    // performance.mark('start-drawing');
     this.container.innerHTML = '';
     this.container.style.gridTemplateColumns = `repeat(${m}, 1fr)`;
     for (let y = 0; y < n; y++) {
@@ -111,14 +120,18 @@ class FieldDrawer {
     if (population.size > 0) {
       this.markAlive(population);
     }
-    performance.mark('finish-drawing');
-    performance.measure('measure-drawing', 'start-drawing', 'finish-drawing');
+    // performance.mark('finish-drawing');
+    // performance.measure('measure-drawing', 'start-drawing', 'finish-drawing');
+    this.cells = this.container.querySelectorAll('.field__cell');
   }
 
   markAlive(population) {
-    Array.from(this.container.children).forEach(cell => {
+    this.cells.forEach(cell => {
       if (population.has(parseInt(cell.dataset.value))) {
         cell.classList.add('field__cell_alive');
+        // cell.style.backgroundColor = 'gray';
+      } else {
+        cell.classList.remove('field__cell_alive');
       }
     });
   }
@@ -126,19 +139,23 @@ class FieldDrawer {
 
 let population = null;
 let gameCycle = 0;
-let gameStarted = false;
 let populationSet = false;
 let fieldSize = 3;
+let genTime = 1;
 
-const randomFirst = document.querySelector('#random');
-const customFirst = document.querySelector('#custom');
-const genNoInput = document.querySelector('#generation-no');
+const controlsFieldset = document.querySelector('.controls');
 const fieldSizeSelector = document.querySelector('#field-size');
 fieldSizeSelector.value = fieldSize;
+const randomFirstSelector = document.querySelector('#random');
+const customFirstSelector = document.querySelector('#custom');
+const genNoInput = document.querySelector('#generation-no');
+const genTimeInput = document.querySelector('#generation-time');
+const clTimeInput = document.querySelector('#calc-time');
 const startButton = document.querySelector('.start-button');
 const resetButton = document.querySelector('.reset-button');
+const gameFieldContainer = document.querySelector('.field');
 
-const drawer = new FieldDrawer('.field');
+const drawer = new FieldDrawer(gameFieldContainer);
 drawer.drawField([fieldSize, fieldSize]);
 
 fieldSizeSelector.addEventListener('change', e => {
@@ -146,31 +163,52 @@ fieldSizeSelector.addEventListener('change', e => {
   drawer.drawField([fieldSize, fieldSize]);
 });
 
-randomFirst.addEventListener('change', e => {
-  console.log('true');
-});
+const addCellToPopulation = e => {
+  const cellId = parseInt(e.target.dataset.value);
+  if (!isNaN(cellId)) {
+    if (population.currentPopulation.has(cellId)) {
+      population.currentPopulation.delete(cellId);
+      e.target.classList.remove('field__cell_alive');
+      if (population.currentPopulation.size < 1) {
+        startButton.disabled = true;
+      }
+    } else {
+      population.addToCurrentPopulation(cellId);
+      e.target.classList.add('field__cell_alive');
+      populationSet = true;
+      startButton.textContent = 'Start game';
+      startButton.disabled = false;
+    }
+  }
+};
 
 startButton.addEventListener('click', e => {
-  if (!gameStarted) {
-    // Start game
-    e.target.textContent = 'Start Game!';
-    gameStarted = true;
+  if (!populationSet) {
     if (!population) {
-      genNoInput.value = 0;
       population = new Population(fieldSize, fieldSize);
-      drawer.drawField([fieldSize, fieldSize], population.setRandomCurrentPopulation());
+    }
+    if (randomFirstSelector.checked) {
+      drawer.markAlive(population.setRandomCurrentPopulation());
+      populationSet = true;
+      controlsFieldset.disabled = true;
+      e.target.textContent = 'Start Game';
+    } else if (customFirstSelector.checked) {
+      gameFieldContainer.addEventListener('click', addCellToPopulation);
+      startButton.textContent = 'Mark cells';
+      controlsFieldset.disabled = true;
+      e.target.disabled = true;
     }
   } else {
-    // Pause game
-    // e.target.textContent = 'Start game';
+    genTime = parseFloat(genTimeInput.value);
+    gameFieldContainer.removeEventListener('click', addCellToPopulation);
     const observer = new PerformanceObserver(perfObserve);
     observer.observe({ entryTypes: ['measure'] });
     const gameLoop = () => {
-      drawer.drawField([fieldSize, fieldSize], population.stepForward());
+      drawer.markAlive(population.stepForward());
       genNoInput.value = population.currentStepNo;
       gameCycle = setTimeout(() => {
         requestAnimationFrame(gameLoop);
-      }, document.querySelector('#generation-time').value * 1000);
+      }, genTime * 1000);
     };
     gameLoop();
     e.target.disabled = true;
@@ -180,25 +218,20 @@ startButton.addEventListener('click', e => {
 
 resetButton.addEventListener('click', () => {
   clearTimeout(gameCycle);
+  clTimeInput.value = '';
   population = null;
-  gameStarted = false;
-  startButton.textContent = 'Setup game';
+  populationSet = false;
+  controlsFieldset.disabled = false;
+  startButton.textContent = 'Apply setup';
+  genNoInput.value = 0;
   startButton.disabled = false;
   drawer.drawField([fieldSize, fieldSize]);
 });
 
 function perfObserve(list) {
-  console.log('vars creation');
-  const drTime = document.querySelector('#draw-time');
-  const clTime = document.querySelector('#calc-time');
-  list.getEntries().forEach((entry) => {
-    if (entry.name === "measure-drawing") {
-      drTime.value = entry.duration;
-    }
-    if (entry.name === "measure-calculating") {
-      clTime.value = entry.duration;
+  list.getEntries().forEach(entry => {
+    if (entry.name === 'measure-calculating') {
+      clTimeInput.value = entry.duration;
     }
   });
 }
-
-

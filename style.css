@@ -1,4 +1,10 @@
-.control {
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.controls {
   padding: 20px;
   display: flex;
   align-items: center;
@@ -6,18 +12,25 @@
   max-width: 100%;
 }
 
-.control fieldset {
+.controls fieldset {
   flex-shrink: 0;
 }
 
-.control input {
+.controls input[type='number'] {
   width: 50px;
 }
 
+section {
+  display: flex;
+  /* flex-direction: column; */
+  align-items: center;
+}
+
 .field {
-  max-width: calc(100vh - 160px);
+  padding-top: 10px;
+  min-width: calc(100vh - 160px);
+  aspect-ratio: 1 / 1;
   display: grid;
-  grid-auto-flow: row;
   align-content: center;
   justify-content: center;
 }
