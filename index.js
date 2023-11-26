@@ -1,162 +1,4 @@
-class Population {
-  constructor(m, n) {
-    this.columns = m;
-    this.rows = n;
-    this.totalCells = this.columns * this.rows;
-    this.currentStepNo = 0;
-    this.currentPopulation = new Set();
-  }
-
-  setRandomCurrentPopulation() {
-    this.currentPopulation = new Set();
-    for (let cell = 0; cell < this.totalCells; cell++) {
-      if (!!Math.round(Math.random())) {
-        this.currentPopulation.add(cell);
-      }
-    }
-    this.currentStepNo = 0;
-    return this.currentPopulation;
-  }
-
-  setCutomCurrentPopulation(cellsList) {
-    this.currentPopulation = new Set();
-    cellsList.forEach(cell => {
-      this.currentPopulation.add(cell);
-    });
-    this.currentStepNo = 0;
-    return this.currentPopulation;
-  }
-
-  addToCurrentPopulation(cell) {
-    this.currentPopulation.add(cell);
-  }
-
-  deleteFromCurrentPopulation(cell) {
-    this.currentPopulation.delete(cell);
-  }
-
-  getCurrentPopulationSize(cell) {
-    return this.currentPopulation.size;
-  }
-
-  stepForward() {
-    performance.mark('start-calculating');
-    const nextPopulation = new Set();
-    const allNeighbours = new Set();
-    this.currentPopulation.forEach(cell => {
-      const aliveNeighboursAmount = this.countAliveNeighbours(cell);
-      if (aliveNeighboursAmount === 2 || aliveNeighboursAmount === 3) {
-        nextPopulation.add(cell);
-      }
-      this.getNeighbours(cell).forEach(nB => allNeighbours.add(nB));
-    });
-    allNeighbours.forEach(neighbour => {
-      if (this.countAliveNeighbours(neighbour) === 3) {
-        nextPopulation.add(neighbour);
-      }
-    });
-    this.currentPopulation = nextPopulation;
-    this.currentStepNo++;
-    // performance.mark('finish-calculating');
-    performance.measure('measure-calculating', 'start-calculating');
-    return nextPopulation;
-  }
-
-  countAliveNeighbours(cell) {
-    return this.getNeighbours(cell).reduce((count, nB) => count + (this.checkAlive(nB) ? 1 : 0), 0);
-  }
-
-  getNeighbours(cell) {
-    const higherCell = cell - this.columns;
-    const lowerCell = cell + this.columns;
-    // От порядка соседей зависит правильность работы функции correctNeighbours
-    // 2 3 4
-    // 0 * 1
-    // 5 6 7
-    const fakeNeighbours = [
-      cell - 1,
-      cell + 1,
-      higherCell - 1,
-      higherCell,
-      higherCell + 1,
-      lowerCell - 1,
-      lowerCell,
-      lowerCell + 1,
-    ];
-    return this.correctNeighbours(fakeNeighbours, cell);
-  }
-
-  correctNeighbours(neighbours, cell) {
-    const cellColumn = cell % this.columns;
-    // Мутируем neighbours чтобы сэкономить память
-    if (cellColumn === 0) {
-      neighbours[2] += this.columns;
-      neighbours[0] += this.columns;
-      neighbours[5] += this.columns;
-    }
-    if (cellColumn === this.columns - 1) {
-      neighbours[4] -= this.columns;
-      neighbours[1] -= this.columns;
-      neighbours[7] -= this.columns;
-    }
-    if (cell < this.columns) {
-      neighbours[2] += this.totalCells;
-      neighbours[3] += this.totalCells;
-      neighbours[4] += this.totalCells;
-    }
-    if (cell >= this.totalCells - this.columns) {
-      neighbours[5] -= this.totalCells;
-      neighbours[6] -= this.totalCells;
-      neighbours[7] -= this.totalCells;
-    }
-    return neighbours;
-  }
-
-  checkAlive(cell) {
-    return this.currentPopulation.has(cell);
-  }
-}
-
-class FieldDrawer {
-  constructor(fieldContainer) {
-    this.container = fieldContainer;
-  }
-
-  drawField([m, n], population = new Set()) {
-    // performance.mark('start-drawing');
-    this.container.innerHTML = '';
-    this.container.style.gridTemplateColumns = `repeat(${m}, 1fr)`;
-    for (let y = 0; y < n; y++) {
-      for (let x = 0; x < m; x++) {
-        const cell = document.createElement('div');
-        cell.classList.add('field__cell');
-        cell.dataset.value = m * y + x;
-        this.container.append(cell);
-      }
-    }
-    if (population.size > 0) {
-      this.markAlive(population);
-    }
-    // performance.mark('finish-drawing');
-    // performance.measure('measure-drawing', 'start-drawing', 'finish-drawing');
-    this.cells = Array.from(this.container.querySelectorAll('.field__cell'));
-  }
-
-  markAlive(population) {
-    this.cells.forEach((cell, i) => {
-      if (population.has(i)) {
-        cell.classList.add('field__cell_alive');
-      } else {
-        cell.classList.remove('field__cell_alive');
-      }
-    });
-  }
-
-  getIdFromCellElement(element) {
-    return this.cells.indexOf(element);
-  }
-}
-
+'use strict';
 const twoGosperGliderGunsSetup = new Set([
   187, 149, 100, 62, 252, 290, 250, 98, 135, 173, 211, 210, 172, 134, 245, 244, 206, 282, 167, 319,
   127, 126, 355, 354, 163, 200, 238, 276, 315, 191, 229, 186, 148, 242, 228, 190, 721, 759, 797,
@@ -209,7 +51,6 @@ const addCellToPopulation = e => {
       populationSet = true;
       startButton.textContent = 'Start game';
       startButton.disabled = false;
-      console.log(population.currentPopulation);
     }
   }
 };
@@ -234,7 +75,10 @@ startButton.addEventListener('click', e => {
         easterLabel.style.display = 'none';
       }
     }
+    resetButton.disabled = false;
     controlsFieldset.disabled = true;
+    genNoInput.value = 0;
+    clTimeInput.value = '';
   } else {
     genTime = parseFloat(genTimeInput.value);
     gameFieldContainer.removeEventListener('click', addCellToPopulation);
@@ -244,11 +88,18 @@ startButton.addEventListener('click', e => {
     e.target.disabled = true;
     resetButton.disabled = false;
     const gameLoop = () => {
+      performance.mark('before-calc-and-draw');
       drawer.markAlive(population.stepForward());
+      performance.measure('calc-and-draw', 'before-calc-and-draw');
       genNoInput.value = population.currentStepNo;
-      gameCycle = setTimeout(() => {
-        requestAnimationFrame(gameLoop);
-      }, genTime * 1000);
+      if (population.getCurrentPopulationSize() < 1) {
+        alert('Game over!');
+        resetButton.dispatchEvent(new CustomEvent('click'));
+      } else {
+        gameCycle = setTimeout(() => {
+          requestAnimationFrame(gameLoop);
+        }, genTime * 100);
+      }
     };
     gameLoop();
     easterCheckbox.checked = false;
@@ -267,7 +118,6 @@ easterCheckbox.addEventListener('change', e => {
     startButton.textContent = 'Mark cells';
     startButton.disabled = true;
   }
-  population;
 });
 
 resetButton.addEventListener('click', () => {
@@ -276,19 +126,23 @@ resetButton.addEventListener('click', () => {
   clearTimeout(gameCycle);
   population = null;
   populationSet = false;
-  clTimeInput.value = '';
-  genNoInput.value = 0;
   controlsFieldset.disabled = false;
   startButton.textContent = 'Apply setup';
   startButton.disabled = false;
   gameFieldContainer.removeEventListener('click', addCellToPopulation);
+  gameFieldContainer.style.cursor = '';
   drawer.markAlive(new Set());
+  resetButton.disabled = true;
 });
 
 function perfObserve(list) {
   list.getEntries().forEach(entry => {
-    if (entry.name === 'measure-calculating') {
+    if (entry.name === 'calc-and-draw') {
       clTimeInput.value = entry.duration;
+    }
+    if (entry.name === 'measure-calculating') {
+      // Choose something...
+      // console.log(entry.duration);
     }
   });
 }

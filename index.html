@@ -6,7 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Life</title>
   <link rel="stylesheet" href="./style.css" />
-  <script type="module" src="./index.js" defer></script>
+  <script type="text/javascript" src="./Population.js" defer></script>
+  <script type="text/javascript" src="./FieldDrawer.js" defer></script>
+  <script type="text/javascript" src="./index.js" defer></script>
 </head>
 
 <body>
@@ -27,23 +29,19 @@
           <input type="radio" id="custom" value="Custom" name="first" class="custom" />
         </fieldset>
         <label>
-          Generation duration [sec]:
-          <input type="number" id="generation-time" min="1" value="1" />
+          Next gen timeout [sec/10]:
+          <input type="number" id="generation-time" min="0" value="1" />
         </label>
         <label>
-          Generations count:
+          Generation count:
           <input type="text" id="generation-no" disabled value="0" />
         </label>
         <label>
-          Calculating time [ms]:
+          Last processing time [ms]:
           <input type="text" id="calc-time" disabled value="0" />
         </label>
-        <!-- <label>
-          Drawing time [ms]:
-          <input type="text" id="draw-time" disabled value="0"/>
-        </label> -->
       </fieldset>
-      <label class="easter-label">Setup Glider Gun
+      <label class="easter-label">Setup 2 Gosper <br> Glider Guns!
       <input type="checkbox" class="easter-check"></label>
       <button type="button" class="start-button">Apply setup</button>
       <button type="button" class="reset-button" disabled>Reset game</button>
