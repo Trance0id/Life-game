@@ -43,4 +43,11 @@ section {
 
 .field__cell_alive {
   background-color: gray;
+  /* border: 1px solid white; */
+}
+
+.easter-label {
+  position: absolute;
+  right: 0;
+  top: 120px;
 }

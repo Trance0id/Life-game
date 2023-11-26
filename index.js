@@ -18,8 +18,25 @@ class Population {
     return this.currentPopulation;
   }
 
+  setCutomCurrentPopulation(cellsList) {
+    this.currentPopulation = new Set();
+    cellsList.forEach(cell => {
+      this.currentPopulation.add(cell);
+    });
+    this.currentStepNo = 0;
+    return this.currentPopulation;
+  }
+
   addToCurrentPopulation(cell) {
     this.currentPopulation.add(cell);
+  }
+
+  deleteFromCurrentPopulation(cell) {
+    this.currentPopulation.delete(cell);
+  }
+
+  getCurrentPopulationSize(cell) {
+    return this.currentPopulation.size;
   }
 
   stepForward() {
@@ -122,20 +139,30 @@ class FieldDrawer {
     }
     // performance.mark('finish-drawing');
     // performance.measure('measure-drawing', 'start-drawing', 'finish-drawing');
-    this.cells = this.container.querySelectorAll('.field__cell');
+    this.cells = Array.from(this.container.querySelectorAll('.field__cell'));
   }
 
   markAlive(population) {
-    this.cells.forEach(cell => {
-      if (population.has(parseInt(cell.dataset.value))) {
+    this.cells.forEach((cell, i) => {
+      if (population.has(i)) {
         cell.classList.add('field__cell_alive');
-        // cell.style.backgroundColor = 'gray';
       } else {
         cell.classList.remove('field__cell_alive');
       }
     });
   }
+
+  getIdFromCellElement(element) {
+    return this.cells.indexOf(element);
+  }
 }
+
+const twoGosperGliderGunsSetup = new Set([
+  187, 149, 100, 62, 252, 290, 250, 98, 135, 173, 211, 210, 172, 134, 245, 244, 206, 282, 167, 319,
+  127, 126, 355, 354, 163, 200, 238, 276, 315, 191, 229, 186, 148, 242, 228, 190, 721, 759, 797,
+  682, 643, 642, 834, 871, 870, 678, 830, 755, 753, 715, 791, 752, 787, 825, 863, 824, 786, 862,
+  747, 899, 707, 935, 768, 730, 769, 731, 745, 897, 848, 810, 811, 849,
+]);
 
 let population = null;
 let gameCycle = 0;
@@ -154,6 +181,9 @@ const clTimeInput = document.querySelector('#calc-time');
 const startButton = document.querySelector('.start-button');
 const resetButton = document.querySelector('.reset-button');
 const gameFieldContainer = document.querySelector('.field');
+const easterCheckbox = document.querySelector('.easter-check');
+const easterLabel = easterCheckbox.closest('label');
+easterLabel.style.display = 'none';
 
 const drawer = new FieldDrawer(gameFieldContainer);
 drawer.drawField([fieldSize, fieldSize]);
@@ -164,12 +194,13 @@ fieldSizeSelector.addEventListener('change', e => {
 });
 
 const addCellToPopulation = e => {
-  const cellId = parseInt(e.target.dataset.value);
-  if (!isNaN(cellId)) {
+  if (e.target.className.includes('field__cell')) {
+    const cellId = drawer.getIdFromCellElement(e.target);
     if (population.currentPopulation.has(cellId)) {
-      population.currentPopulation.delete(cellId);
+      population.deleteFromCurrentPopulation(cellId);
       e.target.classList.remove('field__cell_alive');
-      if (population.currentPopulation.size < 1) {
+      if (population.getCurrentPopulationSize() < 1) {
+        populationSet = false;
         startButton.disabled = true;
       }
     } else {
@@ -178,6 +209,7 @@ const addCellToPopulation = e => {
       populationSet = true;
       startButton.textContent = 'Start game';
       startButton.disabled = false;
+      console.log(population.currentPopulation);
     }
   }
 };
@@ -190,19 +222,27 @@ startButton.addEventListener('click', e => {
     if (randomFirstSelector.checked) {
       drawer.markAlive(population.setRandomCurrentPopulation());
       populationSet = true;
-      controlsFieldset.disabled = true;
       e.target.textContent = 'Start Game';
     } else if (customFirstSelector.checked) {
       gameFieldContainer.addEventListener('click', addCellToPopulation);
-      startButton.textContent = 'Mark cells';
-      controlsFieldset.disabled = true;
+      gameFieldContainer.style.cursor = 'pointer';
+      e.target.textContent = 'Mark cells';
       e.target.disabled = true;
+      if (fieldSize === 38) {
+        easterLabel.style.display = 'block';
+      } else {
+        easterLabel.style.display = 'none';
+      }
     }
+    controlsFieldset.disabled = true;
   } else {
     genTime = parseFloat(genTimeInput.value);
     gameFieldContainer.removeEventListener('click', addCellToPopulation);
+    gameFieldContainer.style.cursor = '';
     const observer = new PerformanceObserver(perfObserve);
     observer.observe({ entryTypes: ['measure'] });
+    e.target.disabled = true;
+    resetButton.disabled = false;
     const gameLoop = () => {
       drawer.markAlive(population.stepForward());
       genNoInput.value = population.currentStepNo;
@@ -211,21 +251,38 @@ startButton.addEventListener('click', e => {
       }, genTime * 1000);
     };
     gameLoop();
-    e.target.disabled = true;
-    resetButton.disabled = false;
+    easterCheckbox.checked = false;
+    easterLabel.style.display = 'none';
   }
 });
 
+easterCheckbox.addEventListener('change', e => {
+  if (e.target.checked) {
+    drawer.markAlive(population.setCutomCurrentPopulation(twoGosperGliderGunsSetup));
+    populationSet = true;
+    startButton.textContent = 'Start game';
+    startButton.disabled = false;
+  } else {
+    drawer.markAlive(population.setCutomCurrentPopulation([]));
+    startButton.textContent = 'Mark cells';
+    startButton.disabled = true;
+  }
+  population;
+});
+
 resetButton.addEventListener('click', () => {
+  easterCheckbox.checked = false;
+  easterLabel.style.display = 'none';
   clearTimeout(gameCycle);
-  clTimeInput.value = '';
   population = null;
   populationSet = false;
+  clTimeInput.value = '';
+  genNoInput.value = 0;
   controlsFieldset.disabled = false;
   startButton.textContent = 'Apply setup';
-  genNoInput.value = 0;
   startButton.disabled = false;
-  drawer.drawField([fieldSize, fieldSize]);
+  gameFieldContainer.removeEventListener('click', addCellToPopulation);
+  drawer.markAlive(new Set());
 });
 
 function perfObserve(list) {
